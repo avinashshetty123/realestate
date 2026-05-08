@@ -4,29 +4,90 @@ import { useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Users, Building, Award, TrendingUp, MapPin, Clock, Shield, Heart } from "lucide-react";
+import {
+  Users,
+  Building,
+  Award,
+  TrendingUp,
+  MapPin,
+  Clock,
+  Shield,
+  Heart,
+} from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger);
 
 const MILESTONES = [
-  { year: "2008", title: "Founded in Mumbai", desc: "Started with a vision to transform Indian real estate" },
-  { year: "2012", title: "Pan-India Expansion", desc: "Expanded to Delhi, Bangalore, and Pune" },
-  { year: "2018", title: "Digital Revolution", desc: "Launched India's first AI-powered property platform" },
-  { year: "2024", title: "Market Leader", desc: "Became India's most trusted real estate consultancy" },
+  {
+    year: "2008",
+    title: "Founded in Mumbai",
+    desc: "Started with a vision to transform Indian real estate",
+  },
+  {
+    year: "2012",
+    title: "Pan-India Expansion",
+    desc: "Expanded to Delhi, Bangalore, and Pune",
+  },
+  {
+    year: "2018",
+    title: "Digital Revolution",
+    desc: "Launched India's first AI-powered property platform",
+  },
+  {
+    year: "2024",
+    title: "Market Leader",
+    desc: "Became India's most trusted real estate consultancy",
+  },
 ];
 
 const ACHIEVEMENTS = [
-  { icon: Building, value: "5000+", label: "Properties Sold", color: "from-blue-500 to-blue-600" },
-  { icon: Users, value: "2500+", label: "Happy Families", color: "from-green-500 to-green-600" },
-  { icon: MapPin, value: "25+", label: "Cities Covered", color: "from-purple-500 to-purple-600" },
-  { icon: Award, value: "50+", label: "Industry Awards", color: "from-orange-500 to-orange-600" },
+  {
+    icon: Building,
+    value: "5000+",
+    label: "Properties Sold",
+    color: "from-blue-500 to-blue-600",
+  },
+  {
+    icon: Users,
+    value: "2500+",
+    label: "Happy Families",
+    color: "from-green-500 to-green-600",
+  },
+  {
+    icon: MapPin,
+    value: "25+",
+    label: "Cities Covered",
+    color: "from-purple-500 to-purple-600",
+  },
+  {
+    icon: Award,
+    value: "50+",
+    label: "Industry Awards",
+    color: "from-orange-500 to-orange-600",
+  },
 ];
 
 const TEAM_VALUES = [
-  { icon: Shield, title: "Trust & Transparency", desc: "Complete transparency in all dealings with zero hidden charges" },
-  { icon: Heart, title: "Customer First", desc: "Your satisfaction is our priority, always going the extra mile" },
-  { icon: TrendingUp, title: "Market Expertise", desc: "15+ years of deep market knowledge across major Indian cities" },
-  { icon: Clock, title: "24/7 Support", desc: "Round-the-clock assistance for all your property needs" },
+  {
+    icon: Shield,
+    title: "Trust & Transparency",
+    desc: "Complete transparency in all dealings with zero hidden charges",
+  },
+  {
+    icon: Heart,
+    title: "Customer First",
+    desc: "Your satisfaction is our priority, always going the extra mile",
+  },
+  {
+    icon: TrendingUp,
+    title: "Market Expertise",
+    desc: "15+ years of deep market knowledge across major Indian cities",
+  },
+  {
+    icon: Clock,
+    title: "24/7 Support",
+    desc: "Round-the-clock assistance for all your property needs",
+  },
 ];
 
 export function AboutSection() {
@@ -42,9 +103,16 @@ export function AboutSection() {
         timelineRef.current?.querySelectorAll(".milestone") ?? [],
         { opacity: 0, x: -50 },
         {
-          opacity: 1, x: 0, duration: 0.8, stagger: 0.2,
-          scrollTrigger: { trigger: timelineRef.current, start: "top 80%", once: true },
-        }
+          opacity: 1,
+          x: 0,
+          duration: 0.8,
+          stagger: 0.2,
+          scrollTrigger: {
+            trigger: timelineRef.current,
+            start: "top 80%",
+            once: true,
+          },
+        },
       );
 
       // Stats counter animation
@@ -56,7 +124,11 @@ export function AboutSection() {
           val: target,
           duration: 2.5,
           ease: "power2.out",
-          scrollTrigger: { trigger: statsRef.current, start: "top 85%", once: true },
+          scrollTrigger: {
+            trigger: statsRef.current,
+            start: "top 85%",
+            once: true,
+          },
           onUpdate: () => {
             el.textContent = Math.round(obj.val).toLocaleString();
           },
@@ -68,9 +140,17 @@ export function AboutSection() {
         valuesRef.current?.querySelectorAll(".value-card") ?? [],
         { opacity: 0, y: 40, rotateX: -15 },
         {
-          opacity: 1, y: 0, rotateX: 0, duration: 0.8, stagger: 0.15,
-          scrollTrigger: { trigger: valuesRef.current, start: "top 80%", once: true },
-        }
+          opacity: 1,
+          y: 0,
+          rotateX: 0,
+          duration: 0.8,
+          stagger: 0.15,
+          scrollTrigger: {
+            trigger: valuesRef.current,
+            start: "top 80%",
+            once: true,
+          },
+        },
       );
     }, sectionRef);
 
@@ -78,7 +158,11 @@ export function AboutSection() {
   }, []);
 
   return (
-    <section id="about" ref={sectionRef} className="py-32 bg-gradient-to-b from-white to-slate-50 overflow-hidden">
+    <section
+      id="about"
+      ref={sectionRef}
+      className="py-32 bg-gradient-to-b from-white to-slate-50 overflow-hidden"
+    >
       <div className="container mx-auto px-6">
         {/* Header */}
         <motion.div
@@ -95,16 +179,11 @@ export function AboutSection() {
           >
             About PropVista
           </motion.span>
-          <h2 className="text-5xl md:text-7xl font-black text-navy mb-8 leading-tight">
-            India's Most Trusted
-            <br />
-            <span className="bg-gradient-to-r from-teal via-teal-light to-blue-500 bg-clip-text text-transparent">
-              Real Estate Partner
-            </span>
-          </h2>
+
           <p className="text-xl text-slate max-w-4xl mx-auto leading-relaxed">
-            For over 15 years, we've been helping Indian families find their perfect homes and investors 
-            discover lucrative opportunities across Mumbai, Delhi, Bangalore, Pune, and 20+ other cities.
+            For over 15 years, we've been helping Indian families find their
+            perfect homes and investors discover lucrative opportunities across
+            Mumbai, Delhi, Bangalore, Pune, and 20+ other cities.
           </p>
         </motion.div>
 
@@ -121,18 +200,26 @@ export function AboutSection() {
           <div className="relative">
             {/* Timeline Line */}
             <div className="absolute left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-teal to-teal-light rounded-full" />
-            
+
             {MILESTONES.map((milestone, i) => (
               <motion.div
                 key={milestone.year}
-                className={`milestone flex items-center mb-16 ${i % 2 === 0 ? 'flex-row' : 'flex-row-reverse'}`}
+                className={`milestone flex items-center mb-16 ${i % 2 === 0 ? "flex-row" : "flex-row-reverse"}`}
                 whileHover={{ scale: 1.02 }}
               >
-                <div className={`w-5/12 ${i % 2 === 0 ? 'text-right pr-8' : 'text-left pl-8'}`}>
+                <div
+                  className={`w-5/12 ${i % 2 === 0 ? "text-right pr-8" : "text-left pl-8"}`}
+                >
                   <div className="bg-white rounded-2xl p-8 shadow-lg border border-slate-200 hover:shadow-xl transition-all">
-                    <div className="text-3xl font-black text-teal mb-2">{milestone.year}</div>
-                    <h4 className="text-xl font-bold text-navy mb-3">{milestone.title}</h4>
-                    <p className="text-slate leading-relaxed">{milestone.desc}</p>
+                    <div className="text-3xl font-black text-teal mb-2">
+                      {milestone.year}
+                    </div>
+                    <h4 className="text-xl font-bold text-navy mb-3">
+                      {milestone.title}
+                    </h4>
+                    <p className="text-slate leading-relaxed">
+                      {milestone.desc}
+                    </p>
                   </div>
                 </div>
                 <div className="w-2/12 flex justify-center">
@@ -161,14 +248,23 @@ export function AboutSection() {
                 whileHover={{ y: -10, rotateY: 5 }}
                 className="text-center group"
               >
-                <div className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${achievement.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all`}>
+                <div
+                  className={`w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-r ${achievement.color} flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all`}
+                >
                   <achievement.icon className="w-10 h-10 text-white" />
                 </div>
                 <div className="text-4xl font-black text-navy mb-2">
-                  <span className="counter-val" data-target={parseInt(achievement.value.replace(/\D/g, ''))}>0</span>
-                  {achievement.value.replace(/\d/g, '')}
+                  <span
+                    className="counter-val"
+                    data-target={parseInt(achievement.value.replace(/\D/g, ""))}
+                  >
+                    0
+                  </span>
+                  {achievement.value.replace(/\d/g, "")}
                 </div>
-                <div className="text-slate font-semibold">{achievement.label}</div>
+                <div className="text-slate font-semibold">
+                  {achievement.label}
+                </div>
               </motion.div>
             ))}
           </div>
@@ -218,9 +314,12 @@ export function AboutSection() {
           className="text-center mt-20"
         >
           <div className="bg-gradient-to-r from-navy to-navy-light rounded-3xl p-12 text-white">
-            <h3 className="text-3xl font-bold mb-4">Ready to Find Your Dream Property?</h3>
+            <h3 className="text-3xl font-bold mb-4">
+              Ready to Find Your Dream Property?
+            </h3>
             <p className="text-white/80 mb-8 max-w-2xl mx-auto">
-              Join thousands of satisfied customers who found their perfect homes with PropVista
+              Join thousands of satisfied customers who found their perfect
+              homes with PropVista
             </p>
             <motion.button
               whileHover={{ scale: 1.05 }}

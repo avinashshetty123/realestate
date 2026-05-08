@@ -97,6 +97,7 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
   const [properties, setProperties] = useState<Array<any>>([]);
   const [showAddProperty, setShowAddProperty] = useState(false);
+  const [priceUnit, setPriceUnit] = useState<"crore" | "lakh">("crore");
   const [newProperty, setNewProperty] = useState<{
     title: string;
     description: string;
@@ -106,6 +107,7 @@ export default function AdminDashboard() {
     bedrooms: string;
     bathrooms: string;
     area: string;
+    areaUnit: string;
     images: Array<{ url: string; public_id: string }>;
     amenities: string[];
     uploadingImages: boolean;
@@ -118,11 +120,13 @@ export default function AdminDashboard() {
     bedrooms: "",
     bathrooms: "",
     area: "",
+    areaUnit: "sqft",
     images: [],
     amenities: [],
     uploadingImages: false,
   });
   const [contacts, setContacts] = useState<Array<any>>([]);
+  const [monthlyVisitors, setMonthlyVisitors] = useState<string>("...");
   const router = useRouter();
 
   useEffect(() => {
@@ -132,6 +136,7 @@ export default function AdminDashboard() {
       setIsAuthenticated(true);
       fetchContacts();
       fetchProperties();
+      fetchVisitors();
     } else {
       router.push("/admin");
     }
@@ -192,9 +197,10 @@ export default function AdminDashboard() {
 
   const handleAddProperty = async () => {
     try {
+      const multiplier = priceUnit === "crore" ? 10000000 : 100000;
       const propertyData = {
         ...newProperty,
-        price: parseInt(newProperty.price) * 10000000,
+        price: parseFloat(newProperty.price) * multiplier,
         bedrooms: parseInt(newProperty.bedrooms) || 0,
         bathrooms: parseInt(newProperty.bathrooms) || 0,
         area: parseInt(newProperty.area) || 0,
@@ -219,10 +225,12 @@ export default function AdminDashboard() {
           bedrooms: "",
           bathrooms: "",
           area: "",
+          areaUnit: "sqft",
           images: [],
           amenities: [],
           uploadingImages: false,
         });
+        setPriceUnit("crore");
         alert("Property added successfully!");
       }
     } catch (error) {
@@ -248,6 +256,19 @@ export default function AdminDashboard() {
       }
     }
   };
+
+  async function fetchVisitors() {
+    try {
+      const res = await fetch("/api/visitors");
+      if (res.ok) {
+        const data = await res.json();
+        const count: number = data.count;
+        setMonthlyVisitors(count >= 1000 ? `${(count / 1000).toFixed(1)}K` : count.toString());
+      }
+    } catch (error) {
+      console.error("Failed to fetch visitors:", error);
+    }
+  }
 
   async function fetchContacts() {
     try {
@@ -370,7 +391,7 @@ export default function AdminDashboard() {
                   },
                   {
                     label: "Monthly Visitors",
-                    value: "6.8K",
+                    value: monthlyVisitors,
                     icon: Users,
                     color: "from-green-500 to-green-600",
                   },
@@ -858,104 +879,106 @@ export default function AdminDashboard() {
                     
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-navy mb-2">
-                          Price (Crores) *
-                        </label>
-                        <input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          value={newProperty.price}
-                          onChange={(e) =>
-                            setNewProperty((prev) => ({
-                              ...prev,
-                              price: e.target.value,
-                            }))
-                          }
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
-                          placeholder="2.5"
-                          required
-                        />
+                        <label className="block text-sm font-semibold text-navy mb-2">Price *</label>
+                        <div className="flex">
+                          <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={newProperty.price}
+                            onChange={(e) => setNewProperty((prev) => ({ ...prev, price: e.target.value }))}
+                            className="flex-1 px-4 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
+                            placeholder={priceUnit === "crore" ? "2.5" : "45"}
+                            required
+                          />
+                          <select
+                            value={priceUnit}
+                            onChange={(e) => setPriceUnit(e.target.value as "crore" | "lakh")}
+                            className="px-3 py-3 border border-l-0 border-gray-200 rounded-r-xl bg-gray-50 text-sm font-semibold text-navy focus:outline-none focus:ring-2 focus:ring-teal/50"
+                          >
+                            <option value="crore">Cr</option>
+                            <option value="lakh">L</option>
+                          </select>
+                        </div>
+                        <p className="text-xs text-slate mt-1">
+                          {newProperty.price
+                            ? `₹ ${(parseFloat(newProperty.price) * (priceUnit === "crore" ? 10000000 : 100000)).toLocaleString("en-IN")}`
+                            : "Enter amount"}
+                        </p>
                       </div>
                       <div>
-                        <label className="block text-sm font-semibold text-navy mb-2">
-                          Property Type *
-                        </label>
+                        <label className="block text-sm font-semibold text-navy mb-2">Property Type *</label>
                         <select
                           value={newProperty.type}
-                          onChange={(e) =>
-                            setNewProperty((prev) => ({
-                              ...prev,
-                              type: e.target.value,
-                            }))
-                          }
+                          onChange={(e) => setNewProperty((prev) => ({ ...prev, type: e.target.value }))}
                           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
                           required
                         >
                           <option value="residential">Residential</option>
                           <option value="commercial">Commercial</option>
-                          <option value="plots">Plots/Land</option>
+                          <option value="plots">Plots / Land</option>
                           <option value="investment">Investment</option>
                         </select>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-4">
+                    <div className={`grid gap-4 ${newProperty.type === "plots" ? "grid-cols-2" : "grid-cols-3"}`}>
                       <div>
                         <label className="block text-sm font-semibold text-navy mb-2">
-                          Area (sq ft) *
+                          {newProperty.type === "plots" ? "Area *" : "Area (sq ft) *"}
                         </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={newProperty.area}
-                          onChange={(e) =>
-                            setNewProperty((prev) => ({
-                              ...prev,
-                              area: e.target.value,
-                            }))
-                          }
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
-                          placeholder="1200"
-                          required
-                        />
+                        <div className="flex">
+                          <input
+                            type="number"
+                            min="0"
+                            value={newProperty.area}
+                            onChange={(e) => setNewProperty((prev) => ({ ...prev, area: e.target.value }))}
+                            className="flex-1 px-4 py-3 border border-gray-200 rounded-l-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
+                            placeholder={newProperty.type === "plots" ? "500" : "1200"}
+                            required
+                          />
+                          {newProperty.type === "plots" ? (
+                            <select
+                              value={newProperty.areaUnit}
+                              onChange={(e) => setNewProperty((prev) => ({ ...prev, areaUnit: e.target.value }))}
+                              className="px-3 py-3 border border-l-0 border-gray-200 rounded-r-xl bg-gray-50 text-xs font-semibold text-navy focus:outline-none"
+                            >
+                              <option value="sqft">sq ft</option>
+                              <option value="sqyd">sq yd</option>
+                              <option value="acre">acre</option>
+                              <option value="guntha">guntha</option>
+                            </select>
+                          ) : (
+                            <span className="px-3 py-3 border border-l-0 border-gray-200 rounded-r-xl bg-gray-50 text-xs font-semibold text-slate flex items-center">sq ft</span>
+                          )}
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-navy mb-2">
-                          Bedrooms
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={newProperty.bedrooms}
-                          onChange={(e) =>
-                            setNewProperty((prev) => ({
-                              ...prev,
-                              bedrooms: e.target.value,
-                            }))
-                          }
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
-                          placeholder="3"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-semibold text-navy mb-2">
-                          Bathrooms
-                        </label>
-                        <input
-                          type="number"
-                          min="0"
-                          value={newProperty.bathrooms}
-                          onChange={(e) =>
-                            setNewProperty((prev) => ({
-                              ...prev,
-                              bathrooms: e.target.value,
-                            }))
-                          }
-                          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
-                          placeholder="2"
-                        />
-                      </div>
+                      {newProperty.type !== "plots" && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-semibold text-navy mb-2">Bedrooms</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={newProperty.bedrooms}
+                              onChange={(e) => setNewProperty((prev) => ({ ...prev, bedrooms: e.target.value }))}
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
+                              placeholder="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-sm font-semibold text-navy mb-2">Bathrooms</label>
+                            <input
+                              type="number"
+                              min="0"
+                              value={newProperty.bathrooms}
+                              onChange={(e) => setNewProperty((prev) => ({ ...prev, bathrooms: e.target.value }))}
+                              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal/50 focus:border-teal transition-all"
+                              placeholder="2"
+                            />
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
