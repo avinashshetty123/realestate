@@ -152,9 +152,9 @@ export function PropertiesSection() {
 
   return (
     <section id="properties" ref={sectionRef} className="py-32 bg-gradient-to-b from-slate-50 to-white">
-      <div className="container mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
-        <div ref={headingRef} className="text-center mb-16 opacity-0">
+        <div ref={headingRef} className="text-center mb-16">
           <motion.span
             initial={{ opacity: 0, scale: 0.8 }}
             whileInView={{ opacity: 1, scale: 1 }}

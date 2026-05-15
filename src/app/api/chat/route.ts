@@ -1,26 +1,62 @@
 import { NextRequest, NextResponse } from "next/server";
 import { rateLimit } from "@/lib/rate-limit";
-import { isRelevantQuery, SYSTEM_PROMPT } from "@/lib/topic-guard";
+import { MongoClient } from "mongodb";
+
+const uri = process.env.MONGODB_URI!;
+
+const NO_ANSWER_REPLY =
+  "Currently we don't have an answer to your query. Our team will reach out to you shortly. Sorry for the inconvenience! 🙏\n\nYou can also contact us directly:\n📱 +91 95957 71672\n📧 info@propvista.in";
+
+async function findAnswer(userMessage: string): Promise<string | null> {
+  const lower = userMessage.toLowerCase().trim();
+
+  const client = new MongoClient(uri);
+  await client.connect();
+  const entries = await client
+    .db("realestate")
+    .collection("chat_knowledge")
+    .find({ isActive: true })
+    .toArray();
+  await client.close();
+
+  let bestMatch: { score: number; answer: string } | null = null;
+
+  for (const entry of entries) {
+    let score = 0;
+
+    // Match keywords
+    for (const kw of entry.keywords ?? []) {
+      if (lower.includes(kw.toLowerCase())) score += 2;
+    }
+
+    // Match words from the question field
+    const qWords = (entry.question as string)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((w) => w.length > 3);
+    for (const word of qWords) {
+      if (lower.includes(word)) score += 1;
+    }
+
+    if (score > 0 && (!bestMatch || score > bestMatch.score)) {
+      bestMatch = { score, answer: entry.answer };
+    }
+  }
+
+  return bestMatch ? bestMatch.answer : null;
+}
 
 export async function POST(req: NextRequest) {
-  // Get IP for rate limiting
   const ip =
     req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ??
     req.headers.get("x-real-ip") ??
     "anonymous";
 
-  // Rate limit check
   const { allowed, remaining, resetIn } = rateLimit(ip);
   if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please wait before sending another message.", resetIn },
-      {
-        status: 429,
-        headers: {
-          "X-RateLimit-Remaining": "0",
-          "X-RateLimit-Reset": String(Math.ceil(resetIn / 1000)),
-        },
-      }
+      { status: 429, headers: { "X-RateLimit-Remaining": "0" } }
     );
   }
 
@@ -36,57 +72,23 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Messages array is required" }, { status: 400 });
   }
 
-  // Topic guard — check the latest user message
   const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
-  if (lastUserMsg && !isRelevantQuery(lastUserMsg.content)) {
-    return NextResponse.json({
-      reply:
-        "I'm PropVista's real estate assistant and can only help with property-related questions. Try asking about buying, selling, renting, or our consultancy services!",
-    });
-  }
-
-  const apiKey = process.env.XAI_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "AI service not configured" }, { status: 500 });
+  if (!lastUserMsg) {
+    return NextResponse.json({ error: "No user message found" }, { status: 400 });
   }
 
   try {
-    const response = await fetch("https://api.x.ai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: "grok-3-mini",
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          ...messages.slice(-10), // Keep last 10 messages for context
-        ],
-        max_tokens: 500,
-        temperature: 0.7,
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.text();
-      console.error("Grok API error:", err);
-      return NextResponse.json({ error: "AI service error. Please try again." }, { status: 502 });
-    }
-
-    const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content ?? "I couldn't generate a response. Please try again.";
-
+    const answer = await findAnswer(lastUserMsg.content);
+    const reply = answer ?? NO_ANSWER_REPLY;
     return NextResponse.json(
       { reply },
-      {
-        headers: {
-          "X-RateLimit-Remaining": String(remaining),
-        },
-      }
+      { headers: { "X-RateLimit-Remaining": String(remaining) } }
     );
   } catch (err) {
-    console.error("Chat API error:", err);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    console.error("Chat route error:", err);
+    return NextResponse.json(
+      { reply: NO_ANSWER_REPLY },
+      { headers: { "X-RateLimit-Remaining": String(remaining) } }
+    );
   }
 }

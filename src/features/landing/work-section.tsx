@@ -130,7 +130,7 @@ export function OurWorkSection() {
 
   return (
     <section id="work" ref={sectionRef} className="py-32 bg-gradient-to-b from-slate-50 to-white overflow-hidden">
-      <div className="container mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}

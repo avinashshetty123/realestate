@@ -168,7 +168,7 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
         initial={{ opacity: 0, scale: 0.8, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.8, y: 20 }}
-        className={`fixed bottom-6 right-24 z-50 bg-white rounded-2xl shadow-2xl border overflow-hidden transition-all duration-300 ${
+        className={`fixed bottom-6 right-24 z-50 bg-white rounded-2xl shadow-2xl border overflow-hidden transition-all duration-300 flex flex-col ${
           isMinimized ? "w-80 h-16" : "w-96 h-[600px]"
         }`}
       >
@@ -206,7 +206,7 @@ export function AIAssistant({ isOpen, onClose }: AIAssistantProps) {
         {!isMinimized && (
           <>
             {/* Messages */}
-            <div className="flex-1 p-4 h-[480px] overflow-y-auto bg-gray-50">
+            <div className="flex-1 p-4 overflow-y-auto bg-gray-50" style={{ minHeight: 0 }}>
               <div className="space-y-4">
                 {messages.map((message) => (
                   <motion.div
