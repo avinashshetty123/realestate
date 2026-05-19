@@ -8,7 +8,14 @@ if (!uri) {
   throw new Error('MONGODB_URI environment variable is not set');
 }
 
+const mongoOptions = {
+  serverSelectionTimeoutMS: 10000,
+  socketTimeoutMS: 45000,
+  maxPoolSize: 10,
+};
+
 export async function GET(request: NextRequest) {
+  let client: MongoClient | null = null;
   try {
     const { searchParams } = new URL(request.url);
     const location = searchParams.get('location');
@@ -17,13 +24,13 @@ export async function GET(request: NextRequest) {
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '12');
 
-    const client = new MongoClient(uri);
+    client = new MongoClient(uri, mongoOptions);
     await client.connect();
 
     const db = client.db('realestate');
     const collection = db.collection('properties');
 
-    const filter: Record<string, unknown> = { status: 'active' };
+    const filter: Record<string, unknown> = {};
 
     if (location && location !== '') {
       filter.location = { $regex: location, $options: 'i' };
@@ -56,8 +63,6 @@ export async function GET(request: NextRequest) {
 
     const total = await collection.countDocuments(filter);
 
-    await client.close();
-
     return NextResponse.json({
       success: true,
       properties,
@@ -71,14 +76,23 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error fetching properties:', error);
     return NextResponse.json({ success: false, message: 'Failed to fetch properties' }, { status: 500 });
+  } finally {
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error('Error closing MongoDB connection:', closeError);
+      }
+    }
   }
 }
 
 export async function POST(request: NextRequest) {
+  let client: MongoClient | null = null;
   try {
     const propertyData = await request.json();
     
-    const client = new MongoClient(uri);
+    client = new MongoClient(uri, mongoOptions);
     await client.connect();
     
     const db = client.db('realestate');
@@ -88,25 +102,32 @@ export async function POST(request: NextRequest) {
       ...propertyData,
       createdAt: new Date(),
       updatedAt: new Date(),
-      status: 'active',
       views: 0
     };
     
     const result = await collection.insertOne(newProperty);
-    await client.close();
     
     return NextResponse.json({ success: true, propertyId: result.insertedId });
   } catch (error) {
     console.error('Error creating property:', error);
     return NextResponse.json({ success: false, message: 'Failed to create property' }, { status: 500 });
+  } finally {
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error('Error closing MongoDB connection:', closeError);
+      }
+    }
   }
 }
 
 export async function PUT(request: NextRequest) {
+  let client: MongoClient | null = null;
   try {
     const { propertyId, ...updateData } = await request.json();
     
-    const client = new MongoClient(uri);
+    client = new MongoClient(uri, mongoOptions);
     await client.connect();
     
     const db = client.db('realestate');
@@ -122,16 +143,23 @@ export async function PUT(request: NextRequest) {
       }
     );
     
-    await client.close();
-    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating property:', error);
     return NextResponse.json({ success: false, message: 'Failed to update property' }, { status: 500 });
+  } finally {
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error('Error closing MongoDB connection:', closeError);
+      }
+    }
   }
 }
 
 export async function DELETE(request: NextRequest) {
+  let client: MongoClient | null = null;
   try {
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get('id');
@@ -140,7 +168,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ success: false, message: 'Property ID required' }, { status: 400 });
     }
     
-    const client = new MongoClient(uri);
+    client = new MongoClient(uri, mongoOptions);
     await client.connect();
     
     const db = client.db('realestate');
@@ -157,11 +185,18 @@ export async function DELETE(request: NextRequest) {
     }
     
     await collection.deleteOne({ _id: new ObjectId(propertyId) });
-    await client.close();
     
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting property:', error);
     return NextResponse.json({ success: false, message: 'Failed to delete property' }, { status: 500 });
+  } finally {
+    if (client) {
+      try {
+        await client.close();
+      } catch (closeError) {
+        console.error('Error closing MongoDB connection:', closeError);
+      }
+    }
   }
 }

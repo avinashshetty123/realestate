@@ -37,33 +37,55 @@ const AMENITY_ICONS: { [key: string]: any } = {
   garden: TreePine,
 };
 
+const getImageUrl = (image: any): string => {
+  if (typeof image === 'string') {
+    return image;
+  }
+  if (image && typeof image === 'object' && image.url) {
+    return image.url;
+  }
+  return "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800";
+};
+
 export default function PropertyDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [property, setProperty] = useState<Property | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showContactForm, setShowContactForm] = useState(false);
 
   useEffect(() => {
     if (params.id) {
-      fetchProperty(params.id as string);
+      const id = params.id as string;
+      console.log('Property ID from params:', id, 'Length:', id.length);
+      fetchProperty(id);
     }
   }, [params.id]);
 
   const fetchProperty = async (id: string) => {
     try {
+      setLoading(true);
+      setError(null);
+      
+      console.log('Fetching property with ID:', id);
+      
       const response = await fetch(`/api/properties/${id}`);
       const data = await response.json();
       
-      if (data.success) {
+      console.log('API Response:', data);
+      
+      if (data.success && data.property) {
         setProperty(data.property);
       } else {
-        router.push('/properties');
+        setError(data.message || 'Property not found');
+        setTimeout(() => router.push('/properties'), 2000);
       }
     } catch (error) {
       console.error('Failed to fetch property:', error);
-      router.push('/properties');
+      setError('Failed to load property details');
+      setTimeout(() => router.push('/properties'), 2000);
     } finally {
       setLoading(false);
     }
@@ -99,15 +121,16 @@ export default function PropertyDetailPage() {
     );
   }
 
-  if (!property) {
+  if (error || !property) {
     return (
       <div className="min-h-screen bg-gray-50 pt-24 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-bold text-navy mb-2">Property Not Found</h2>
-          <p className="text-slate mb-4">The property you're looking for doesn't exist.</p>
+          <p className="text-slate mb-4">{error || "The property you're looking for doesn't exist."}</p>
+          <p className="text-sm text-slate mb-4">Redirecting to properties page...</p>
           <button
             onClick={() => router.push('/properties')}
-            className="bg-teal text-white px-6 py-3 rounded-lg font-semibold"
+            className="bg-teal text-white px-6 py-3 rounded-lg font-semibold hover:bg-teal-dark transition-colors"
           >
             Back to Properties
           </button>
@@ -139,13 +162,14 @@ export default function PropertyDetailPage() {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-2xl overflow-hidden shadow-lg"
             >
-              <div className="relative h-96">
+              <div className="relative h-96 bg-gray-200">
                 <img
-                  src={typeof property.images?.[currentImageIndex] === 'string' 
-                    ? property.images[currentImageIndex] 
-                    : (property.images?.[currentImageIndex] as any)?.url || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800"}
+                  src={getImageUrl(property.images?.[currentImageIndex])}
                   alt={property.title}
                   className="w-full h-full object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=800";
+                  }}
                 />
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full">
                   <span className="text-sm font-semibold text-teal capitalize">{property.type}</span>
@@ -166,11 +190,18 @@ export default function PropertyDetailPage() {
                     <button
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
-                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                      className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
                         currentImageIndex === index ? "border-teal" : "border-gray-200"
                       }`}
                     >
-                      <img src={typeof image === 'string' ? image : (image as any).url} alt={`View ${index + 1}`} className="w-full h-full object-cover" />
+                      <img 
+                        src={getImageUrl(image)} 
+                        alt={`View ${index + 1}`} 
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=100";
+                        }}
+                      />
                     </button>
                   ))}
                 </div>
@@ -196,29 +227,33 @@ export default function PropertyDetailPage() {
                     <IndianRupee className="w-8 h-8" />
                     {formatPrice(property.price)}
                   </div>
-                  <div className="flex items-center gap-2 text-sm text-slate">
-                    <Eye className="w-4 h-4" />
-                    {property.views} views
-                  </div>
                 </div>
+              </div>
+
+              {/* Visit Count Badge */}
+              <div className="mb-6 inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg border border-blue-200">
+                <Eye className="w-5 h-5 text-blue-600" />
+                <span className="text-sm font-semibold text-blue-900">
+                  {Number(property.views) || 0} {Number(property.views) === 1 ? 'visit' : 'visits'}
+                </span>
               </div>
 
               {/* Property Stats */}
               <div className="grid grid-cols-3 gap-6 mb-8 p-6 bg-gray-50 rounded-xl">
-                {property.bedrooms && (
+                {property.bedrooms ? (
                   <div className="text-center">
                     <Bed className="w-8 h-8 text-teal mx-auto mb-2" />
                     <div className="text-2xl font-bold text-navy">{property.bedrooms}</div>
                     <div className="text-sm text-slate">Bedrooms</div>
                   </div>
-                )}
-                {property.bathrooms && (
+                ) : null}
+                {property.bathrooms ? (
                   <div className="text-center">
                     <Bath className="w-8 h-8 text-teal mx-auto mb-2" />
                     <div className="text-2xl font-bold text-navy">{property.bathrooms}</div>
                     <div className="text-sm text-slate">Bathrooms</div>
                   </div>
-                )}
+                ) : null}
                 <div className="text-center">
                   <Square className="w-8 h-8 text-teal mx-auto mb-2" />
                   <div className="text-2xl font-bold text-navy">{property.area}</div>

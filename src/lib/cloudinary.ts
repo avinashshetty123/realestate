@@ -1,13 +1,20 @@
 import { v2 as cloudinary } from 'cloudinary';
 
+// Configure Cloudinary
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME || 'your-cloud-name',
-  api_key: process.env.CLOUDINARY_API_KEY || 'your-api-key',
-  api_secret: process.env.CLOUDINARY_API_SECRET || 'your-api-secret',
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true
 });
 
 export const uploadToCloudinary = async (file: string, folder: string = 'realestate') => {
   try {
+    // Validate configuration
+    if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+      throw new Error('Cloudinary configuration is missing');
+    }
+
     const result = await cloudinary.uploader.upload(file, {
       folder,
       resource_type: 'auto',
@@ -15,6 +22,7 @@ export const uploadToCloudinary = async (file: string, folder: string = 'realest
         { width: 1200, height: 800, crop: 'fill', quality: 'auto' }
       ]
     });
+    
     return {
       success: true,
       url: result.secure_url,

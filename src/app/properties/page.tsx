@@ -15,12 +15,22 @@ interface Property {
   bedrooms?: number;
   bathrooms?: number;
   area: number;
-  images: string[];
+  images: Array<{ url: string; public_id: string } | string>;
   amenities: string[];
   status: string;
   views: number;
   createdAt: string;
 }
+
+const getImageUrl = (image: any): string => {
+  if (typeof image === 'string') {
+    return image;
+  }
+  if (image && typeof image === 'object' && image.url) {
+    return image.url;
+  }
+  return "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400";
+};
 
 export default function PropertiesPage() {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -208,7 +218,7 @@ export default function PropertiesPage() {
                 <div className={viewMode === "list" ? "w-1/3" : "w-full"}>
                   <div className="relative h-48 overflow-hidden">
                     <img
-                      src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=400"}
+                      src={getImageUrl(property.images?.[0])}
                       alt={property.title}
                       className="w-full h-full object-cover"
                     />
