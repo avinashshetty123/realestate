@@ -2,16 +2,16 @@
 
 import { Navbar } from "@/components/layouts/clean-navbar";
 import { Footer } from "@/components/layouts/footer";
-import { ContactForm } from "@/components/contact-form";
+import { ServicesSection } from "@/features/landing/services-section";
 import { WhatsAppButton } from "@/components/ui/whatsapp-button";
 import { AIChatbot } from "@/components/ui/ai-chatbot";
 
-export default function ContactPage() {
+export default function ServicesPage() {
   return (
-    <main className="relative min-h-screen bg-navy">
+    <main className="relative min-h-screen bg-white">
       <Navbar />
       <div className="pt-20 min-h-screen">
-        <ContactForm />
+        <ServicesSection />
       </div>
       <Footer />
       <WhatsAppButton />

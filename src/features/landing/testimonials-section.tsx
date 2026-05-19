@@ -53,8 +53,8 @@ export function TestimonialsSection() {
 
   return (
     <section id="testimonials" ref={sectionRef} className="py-32 bg-navy">
-      <div className="container mx-auto px-6">
-        <div ref={headingRef} className="text-center mb-20 opacity-0">
+      <div className="max-w-7xl mx-auto px-6">
+        <div ref={headingRef} className="text-center mb-20">
           <h2 className="text-5xl font-black text-white mb-6">
             Client <span className="text-gradient">Stories</span>
           </h2>
