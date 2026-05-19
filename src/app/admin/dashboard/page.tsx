@@ -128,6 +128,7 @@ export default function AdminDashboard() {
     uploadingImages: false,
   });
   const [contacts, setContacts] = useState<Array<any>>([]);
+  const [monthlyVisitors, setMonthlyVisitors] = useState("0");
   const [selectedContact, setSelectedContact] = useState<any>(null);
   const [contactFilter, setContactFilter] = useState("all");
   const [chatSessions, setChatSessions] = useState<Array<any>>([]);
@@ -148,6 +149,7 @@ export default function AdminDashboard() {
       fetchProperties();
       fetchChatSessions();
       fetchKnowledge();
+      fetchVisitors();
     } else {
       router.push("/admin");
     }
@@ -345,6 +347,18 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       console.error("Failed to fetch contacts:", error);
+    }
+  }
+
+  async function fetchVisitors() {
+    try {
+      const response = await fetch("/api/visitors");
+      if (response.ok) {
+        const data = await response.json();
+        setMonthlyVisitors((data.count ?? 0).toLocaleString());
+      }
+    } catch (error) {
+      console.error("Failed to fetch visitors:", error);
     }
   }
 
